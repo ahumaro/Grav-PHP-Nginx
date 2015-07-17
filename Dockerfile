@@ -21,7 +21,12 @@ RUN git clone https://github.com/getgrav/grav.git /usr/share/nginx/html/
 WORKDIR /usr/share/nginx/html/
 RUN bin/composer.phar self-update
 RUN bin/grav install
-RUN chown -R www-data:www-data cache/ logs/ images/ assets/ user/data/ backup/
+RUN chown www-data:www-data .
+RUN chown -R www-data:www-data *
+RUN find . -type f | xargs chmod 664
+RUN find . -type d | xargs chmod 775
+RUN find . -type d | xargs chmod +s
+RUN umask 0002
 
 #Configure Nginx - enable gzip
 RUN sed -i 's|# gzip_types|  gzip_types|' /etc/nginx/nginx.conf

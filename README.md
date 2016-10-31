@@ -62,7 +62,7 @@ In theory, the use of Docker and containers encourage the one process per contai
 
 The definition for this new **Grav-PHP-Nginx** container perfirm several tasks at build time:
 
-+ Define the base image as **phusion/baseimage:0.9.16**, an excelent minified Ubuntu 14.04 LTS Docker container.
++ Define the base image as **phusion/baseimage:0.9.19**, an excelent minified Ubuntu 16.04 LTS Docker container.
 + Install and update the core components for this new container like Nginx, PHP-FPM, etc.
 + Get Grav up-to-date files from its GIT repository.
 + Run Grav install scripts.

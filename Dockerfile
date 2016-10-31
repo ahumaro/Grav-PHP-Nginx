@@ -1,4 +1,4 @@
-FROM phusion/baseimage:0.9.16
+FROM phusion/baseimage:0.9.19
 
 MAINTAINER Ahumaro Mendoza <ahumaro@ahumaro.com>
 
@@ -10,7 +10,7 @@ ENV DEBIAN_FRONTEND noninteractive
 #Install core packages
 RUN apt-get update -q
 RUN apt-get upgrade -y -q
-RUN apt-get install -y -q php5 php5-cli php5-fpm php5-gd php5-curl php5-apcu ca-certificates nginx git-core
+RUN apt-get install -y -q php php-cli php-fpm php-gd php-curl php-apcu php-xml php-mbstring php-zip ca-certificates nginx git-core
 RUN apt-get clean -q && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 #Get Grav
@@ -21,7 +21,6 @@ RUN git clone https://github.com/getgrav/grav.git /usr/share/nginx/html/
 WORKDIR /usr/share/nginx/html/
 RUN bin/composer.phar self-update
 RUN bin/grav install
-RUN chown www-data:www-data .
 RUN chown -R www-data:www-data *
 RUN find . -type f | xargs chmod 664
 RUN find . -type d | xargs chmod 775
@@ -39,28 +38,30 @@ RUN echo '#!/bin/bash \n\
     ok="0" \n\
     while IFS="" read line \n\
     do \n\
-        if [ "$line" = "    server {" ]; then \n\
+        if [ "$line" = "server {" ]; then \n\
             ok="1" \n\
-        fi \n\
-        if [ "$line" = "}" ]; then \n\
-            ok="0" \n\
         fi \n\
         if [ "$ok" = "1" ]; then \n\
             echo "$line" >> /etc/nginx/sites-available/default \n\
         fi \n\
-    done < /usr/share/nginx/html/nginx.conf' >> /etc/nginx/grav_conf.sh
+        if [ "$line" = "}" ]; then \n\
+            ok="0" \n\
+        fi \n\
+    done < /usr/share/nginx/html/webserver-configs/nginx.conf' >> /etc/nginx/grav_conf.sh
 RUN /etc/nginx/grav_conf.sh
 RUN sed -i \
-        -e 's|root   html|root   /usr/share/nginx/html|' \
-        -e 's|127.0.0.1:9000;|unix:/var/run/php5-fpm.sock;|' \
+        -e 's|root /home/USER/www/html|root   /usr/share/nginx/html|' \
+        -e 's|unix:/var/run/php5-fpm.sock;|unix:/run/php/php7.0-fpm.sock;|' \
     /etc/nginx/sites-available/default
 
 #Setup Php service
-RUN mkdir -p /etc/service/php5-fpm
-RUN touch /etc/service/php5-fpm/run
-RUN chmod +x /etc/service/php5-fpm/run
+RUN mkdir -p /run/php/
+RUN touch /run/php/php7.0-fpm.sock
+RUN mkdir -p /etc/service/php-fpm
+RUN touch /etc/service/php-fpm/run
+RUN chmod +x /etc/service/php-fpm/run
 RUN echo '#!/bin/bash \n\
-    exec /usr/sbin/php5-fpm -F' >> /etc/service/php5-fpm/run
+    exec /usr/sbin/php-fpm7.0 -F' >> /etc/service/php-fpm/run
 
 #Setup Nginx service
 RUN mkdir -p /etc/service/nginx
